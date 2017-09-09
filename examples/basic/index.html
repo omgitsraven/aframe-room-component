@@ -14,9 +14,15 @@
         
         <img id="testTex" src="test.png">
         
-        <a-mixin id="floorMat" material="color:#666"></a-mixin>
+        <a-mixin id="floorMat" material="color:#BBB"></a-mixin>
+        
+        <img id="groundTexture" src="https://cdn.aframe.io/a-painter/images/floor.jpg">
+        <img id="skyTexture" src="https://cdn.aframe.io/a-painter/images/sky.jpg">
         
       </a-assets>
+      
+      <a-sky height="2048" radius="30" src="#skyTexture" theta-length="90" width="2048" segments-height="5" segments-width="8"></a-sky>
+      <a-plane src="#groundTexture" rotation="-90 0 0" position="0 -0.01 0" height="100" width="100"></a-plane>
       
       <a-light type="directional" intensity="0.9" position="-1 -2  2"></a-light>
       <a-light type="directional" intensity="1.0" position=" 2  1 -1"></a-light>
@@ -27,7 +33,9 @@
           <rw-doorhole id="holeA"></rw-doorhole>
         </rw-wall>
         <rw-wall height="3" position="5 0 0" material="color:#F88"></rw-wall>
-        <rw-wall height="3" position="5 0 5" material="color:#F88"></rw-wall>
+        <rw-wall height="3" position="5 0 5" material="color:#F88">
+          <rw-doorhole id="frontInner"></rw-doorhole>
+        </rw-wall>
         <rw-wall height="3" position="0 0 5" material="color:#F88"></rw-wall>
         
         <rw-floor mixin="floorMat"></rw-floor>
@@ -73,6 +81,22 @@
         
         <rw-floor mixin="floorMat"></rw-floor>
         <rw-ceiling material="color:#99A"></rw-ceiling>
+        
+      </rw-room>
+      
+      <rw-room position="0 0 0" outside="true" material="color:#877">
+        
+        <rw-wall position="-3 0 -8" height="3"></rw-wall>
+        <rw-wall position=" 4 0 -8" height="3"></rw-wall>
+        <rw-wall position=" 4 0  3" height="3"></rw-wall>
+        <rw-wall position="-3 0  3" height="3">
+          <rw-doorhole id="frontOuter"></rw-doorhole>
+          <rw-doorlink from="#frontInner" to="#frontOuter" material="color:#778" position="3 0 0">
+            <rw-floor></rw-floor>
+            <rw-ceiling></rw-ceiling>
+            <rw-sides></rw-sides>
+          </rw-doorlink>
+        </rw-wall>
         
       </rw-room>
     

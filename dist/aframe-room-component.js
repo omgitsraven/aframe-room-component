@@ -76,8 +76,7 @@
 			
 			PLANNED FEATURES TO COME (in order):
 			- greater control over UV generation
-			- room sidedness (to allow for building exteriors, which would also let doors open out into the outside world)
-			- shorthand for axis-aligned rectangular rooms (auto-position the 4 walls from 2 points)
+			- shorthand for axis-aligned rectangular rooms (auto-position the 4 walls from 2 points) (also same for height)
 			- automatic collision assignment
 			- doors lifted above the ground (i.e. windows)
 			- accept a shape to be extruded around a doorhole to make a doorframe (& around a floor to make a baseboard)
@@ -154,6 +153,8 @@
 				// the results of this not being saved anywhere is super wasteful,
 				// but, see above; not worth worrying about yet
 				
+				var isOutside = roomEl.components.room.data.outside;
+				
 				var walls=[];
 				for(var roomChildNodeIndex=0; roomChildNodeIndex<roomEl.children.length; roomChildNodeIndex++){
 					var roomChildNode = roomEl.children[roomChildNodeIndex];
@@ -170,7 +171,11 @@
 					cwSum += (nextWallPos.x - curWallPos.x) * (nextWallPos.z + curWallPos.z);
 					
 				}
-				if (cwSum > 0) walls.reverse();
+				
+				var shouldReverse = false;
+				if (cwSum > 0) shouldReverse = !shouldReverse;
+				if (isOutside) shouldReverse = !shouldReverse;
+				if (shouldReverse) walls.reverse();
 				
 				return walls;
 				
@@ -283,6 +288,8 @@
 				for(var sceneChildNodeIndex=0; sceneChildNodeIndex<buildingSelf.el.children.length; sceneChildNodeIndex++){
 					var sceneChildNode = buildingSelf.el.children[sceneChildNodeIndex];
 					if (sceneChildNode.components && sceneChildNode.components.room) {
+						
+						var isOutside = sceneChildNode.components.room.data.outside;
 						
 						var walls=getRoomWallArray(sceneChildNode);
 						if (walls.length > 2) {
@@ -420,7 +427,12 @@
 									curVert.set(curVert.x,curWallNode.components.position.data.y,curVert.y);
 									if (isCeiling) curVert.y += curWallNode.components.wall.data.height;
 								}
-								if (!isCeiling) flipGeom(capGeom);
+								
+								var shouldReverse = false;
+								if (!isCeiling) shouldReverse = !shouldReverse;
+								if (isOutside)  shouldReverse = !shouldReverse;
+								if (shouldReverse) flipGeom(capGeom);
+								
 								makePlaneUvs(capGeom,'x','z',isCeiling?1:-1,1);
 								finishGeom(capGeom);
 								
@@ -612,7 +624,7 @@
 	AFRAME.registerComponent('room',Object.assign({
 		
 		schema:{
-			side:{type:'string'},
+			outside:{type:'boolean'},
 		},
 		
 	},refreshSceneConfig));
@@ -663,7 +675,7 @@
 	AFRAME.registerPrimitive('rw-room',{
 		defaultComponents:{room:{}},
 		mappings:{
-			side:'room.side'
+			outside:'room.outside'
 		}
 	});
 

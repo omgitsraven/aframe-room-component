@@ -74,7 +74,7 @@ This is set of primitives (also usable as components) that can be used to easily
 
 | Primitive   | Component | Purpose | Attributes &amp; Components |
 | - | - | - | - |
-| rw-room     | room      | Contains a set of walls, and other objects. | position, material |
+| rw-room     | room      | Contains a set of walls, and other objects. | position, material, outside |
 | rw-wall     | wall      | Marks one corner of a wall, which will connect to the next. | position, material, height |
 | rw-doorhole | doorhole  | Marks a wall so that a doorlink can connect to it. | (none) |
 | rw-doorlink | doorlink  | Connects two doorholes, as well as positioning them as close to it as possible. | from, to, position, width, height |
@@ -84,7 +84,7 @@ This is set of primitives (also usable as components) that can be used to easily
 
 An `a-scene` can contain multiple `rw-room`s.
 
-An `rw-room` must contain at least three `rw-wall`s.
+An `rw-room` must contain at least three `rw-wall`s. You can add `outside="true"` to the room if you want its walls to describe the outside of a building rather than the interior of a room.
 
 If an `rw-wall` does not have a `material` component, it will use its parent `rw-room`'s material component. (A material component **must** be supplied on either the `rw-wall` or the `rw-room`.) The same goes for `rw-floor`, `rw-ceiling` and `rw-sides` (and their parent `rw-doorlink` or `rw-room`).
 
@@ -104,6 +104,8 @@ An `rw-floor` and an `rw-ceiling` must be the child of either an `rw-room` or an
 
 You may find it helpful to use a mixin for a commonly-occuring material (such as a floor material).
 
+If you want to make a door to the outside world, make an `rw-room` around your other rooms, with `outside="true"` on it, and put the other doorhole on one of its walls.
+
 These primitives should all correctly respect changes made in the Inspector; however, at the moment, there seems to be a bug where changes are only propagated to the objects a few times a second. If you have made changes in the inspector but things look like they aren't fitting right, make a minor change to one of the numerical properties to force everything to update.
 
 
@@ -111,7 +113,6 @@ These primitives should all correctly respect changes made in the Inspector; how
 #### Planned features
 
 - Greater control over UV generation (world space, scale to surface, etc)
-- Ability to create doorlinks to the outside world (and define building exteriors)
 - Shorthand to create axis-aligned rectangular rooms more quickly by only specifying a length and width
 - Automatically assign collision for movement and teleportation systems
 - Create doors above ground level (i.e. windows)
@@ -119,7 +120,7 @@ These primitives should all correctly respect changes made in the Inspector; how
 
 #### Known issues
 
-Room corners (i.e. `rw-wall`s) can be specified in either clockwise or counterclockwise order; however, they will be rearranged internally to always wind clockwise, so you may find that the x axis is pointing to the previous wall rather than the next wall if you list them in counterclockwise order. (This doesn't hurt anything; it's just something to be aware of in case you're confused why it's happening.)
+Room corners (i.e. `rw-wall`s) can be specified in either clockwise or counterclockwise order; however, they will be rearranged internally to always wind clockwise, so you may find that the x axis is pointing to the previous wall rather than the next wall if you list them in counterclockwise order. (This doesn't hurt anything; it's just something to be aware of in case you're confused why it's happening.) This will also happen if you copy a room but set it to `outside`.
 
 Walls can have non-zero `y` coordinates, which for the most part should be handled gracefully — however, there is no simple way to offer control over the triangulation of the ceiling and floor, so rooms whose wall slopes aren't constant may have unpredictable floor and ceiling shapes.
 

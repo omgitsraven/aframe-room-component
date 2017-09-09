@@ -1,6 +1,6 @@
 {
   "name": "aframe-room-component",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "An A-Frame component for quickly creating rooms connected by doors.",
   "main": "index.js",
   "cdn": "dist/aframe-room-component.min.js",
@@ -36,6 +36,8 @@
   "homepage": "https://github.com/omgitsraven/aframe-room-component#readme",
   "devDependencies": {
     "aframe": "*",
+    "babel-loader": "^7.1.2",
+    "babel-preset-es2015": "^6.24.1",
     "browserify": "^13.0.0",
     "budo": "^8.2.2",
     "chai": "^3.4.1",
@@ -54,11 +56,11 @@
     "randomcolor": "^0.4.4",
     "semistandard": "^8.0.0",
     "shelljs": "^0.7.0",
-    "sinon": "^1.17.5",
-    "sinon-chai": "^2.8.0",
     "shx": "^0.1.1",
+    "sinon": "^1.17.7",
+    "sinon-chai": "^2.8.0",
     "snazzy": "^4.0.0",
-    "webpack": "^1.13.0"
+    "webpack": "^1.15.0"
   },
   "semistandard": {
     "globals": [
