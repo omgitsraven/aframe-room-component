@@ -5,6 +5,8 @@
 
 A set of [A-Frame](https://aframe.io) components for quickly creating rooms connected by doors.
 
+[Click here to see an example](https://omgitsraven.github.io/aframe-room-component/examples/basic/)
+
 ### Installation
 
 #### Browser
@@ -101,6 +103,8 @@ An `rw-floor` and an `rw-ceiling` must be the child of either an `rw-room` or an
 ### Notes
 
 #### Tips
+
+Have a look at the source to [this example](https://omgitsraven.github.io/aframe-room-component/examples/basic/) to see some ways that this system can be used.
 
 You may find it helpful to use a mixin for a commonly-occuring material (such as a floor material).
 
