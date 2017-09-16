@@ -30,7 +30,6 @@ AFRAME.registerSystem('building',{
 		
 		PLANNED FEATURES TO COME (in order):
 		- greater control over UV generation
-		- shorthand for axis-aligned rectangular rooms (auto-position the 4 walls from 2 points) (also same for height)
 		- automatic collision assignment
 		- doors lifted above the ground (i.e. windows)
 		- accept a shape to be extruded around a doorhole to make a doorframe (& around a floor to make a baseboard)
@@ -41,6 +40,7 @@ AFRAME.registerSystem('building',{
 		KNOWN ISSUES (with no obvious solution that would preserve ease of use):
 		- floor/ceiling triangulation is not controllable (and therefore varying wall verticality is nearly useless unless slope is consistent)
 		- doorhole parenting is always level to the horizon even on slope-floored walls
+		- the setTimeout thing results in a one-frame flash of invisible walls: is it worth it? (is there a smarter thing to listen for, maybe?)
 		
 		ISSUES THAT COULD THEORETICALLY BE FIXED BUT DON'T SEEM WORTH THE TROUBLE:
 		- walls are internally rearranged to always wind CW, which means wall parenting will point towards the "previous" wall if you entered them in CCW order
@@ -100,7 +100,14 @@ AFRAME.registerSystem('building',{
 		
 		
 		
-		
+		function getUnsortedRoomWallArray(roomEl){
+			var walls=[];
+			for(var roomChildNodeIndex=0; roomChildNodeIndex<roomEl.children.length; roomChildNodeIndex++){
+				var roomChildNode = roomEl.children[roomChildNodeIndex];
+				if (roomChildNode.components.wall) walls.push(roomChildNode);
+			}
+			return walls;
+		}
 		
 		function getRoomWallArray(roomEl){
 			
@@ -109,11 +116,7 @@ AFRAME.registerSystem('building',{
 			
 			var isOutside = roomEl.components.room.data.outside;
 			
-			var walls=[];
-			for(var roomChildNodeIndex=0; roomChildNodeIndex<roomEl.children.length; roomChildNodeIndex++){
-				var roomChildNode = roomEl.children[roomChildNodeIndex];
-				if (roomChildNode.components.wall) walls.push(roomChildNode);
-			}
+			var walls = getUnsortedRoomWallArray(roomEl);
 			
 			var cwSum=0;
 			for(var wallIndex=0; wallIndex<walls.length; wallIndex++){
@@ -179,6 +182,11 @@ AFRAME.registerSystem('building',{
 			}
 		}
 		
+		function getWallHeight(wallEl){
+			if (wallEl.components.wall.data.height) return wallEl.components.wall.data.height;
+			return wallEl.parentNode.components.room.data.height;
+		}
+		
 		
 		
 		
@@ -194,11 +202,33 @@ AFRAME.registerSystem('building',{
 			
 			
 			
+			
 			// lay out walls' angles:
 			
 			for(var sceneChildNodeIndex=0; sceneChildNodeIndex<buildingSelf.el.children.length; sceneChildNodeIndex++){
 				var sceneChildNode = buildingSelf.el.children[sceneChildNodeIndex];
 				if (sceneChildNode.components && sceneChildNode.components.room) {
+					
+					
+					var w = sceneChildNode.components.room.data.width;
+					var l = sceneChildNode.components.room.data.length;
+					if (w || l) {
+						if (w && l) {
+							var rawWalls = getUnsortedRoomWallArray(sceneChildNode);
+							if (rawWalls.length >= 4) {
+								if (rawWalls.length > 4) console.error("rooms with WIDTH and LENGTH should only have four walls!");
+								rawWalls[0].setAttribute("position",{x:0,y:0,z:0});
+								rawWalls[1].setAttribute("position",{x:w,y:0,z:0});
+								rawWalls[2].setAttribute("position",{x:w,y:0,z:l});
+								rawWalls[3].setAttribute("position",{x:0,y:0,z:l});
+							} else {
+								console.error("rooms with WIDTH and LENGTH must have four walls!");
+							}
+						} else {
+							console.error("rooms with WIDTH must also have LENGTH (and vice versa)");
+						}
+					}
+					
 					
 					var walls=getRoomWallArray(sceneChildNode);
 					if (walls.length > 2) {
@@ -243,12 +273,12 @@ AFRAME.registerSystem('building',{
 				var sceneChildNode = buildingSelf.el.children[sceneChildNodeIndex];
 				if (sceneChildNode.components && sceneChildNode.components.room) {
 					
-					var isOutside = sceneChildNode.components.room.data.outside;
 					
+					
+					var isOutside = sceneChildNode.components.room.data.outside;
 					var walls=getRoomWallArray(sceneChildNode);
+					
 					if (walls.length > 2) {
-						
-						
 						
 						
 						for(var wallIndex=0; wallIndex<walls.length; wallIndex++){
@@ -261,7 +291,7 @@ AFRAME.registerSystem('building',{
 							var wallAng = Math.atan2(wallGapZ,wallGapX);
 							
 							var wallGapY = nextWallNode.components.position.data.y - curWallNode.components.position.data.y;
-							var heightGap = nextWallNode.components.wall.data.height - curWallNode.components.wall.data.height;
+							var heightGap = getWallHeight(nextWallNode) - getWallHeight(curWallNode);
 							
 							var orderedHoles=[];
 							for(var wallChildNodeIndex=0; wallChildNodeIndex<curWallNode.children.length; wallChildNodeIndex++){
@@ -277,7 +307,7 @@ AFRAME.registerSystem('building',{
 							var wallShape = new THREE.Shape();
 							wallShape.moveTo(
 								0,
-								curWallNode.components.wall.data.height
+								getWallHeight(curWallNode)
 							);
 							wallShape.lineTo(
 								0,
@@ -301,7 +331,7 @@ AFRAME.registerSystem('building',{
 									var floorY = (ptX/wallLength)*wallGapY;
 									var topY = floorY + linkInfo.doorlink.data.height;
 									
-									var curCeil = curWallNode.components.wall.data.height + (ptX/wallLength)*heightGap;
+									var curCeil = getWallHeight(curWallNode) + (ptX/wallLength)*heightGap;
 									var maxTopY = floorY + curCeil - HAIR;//will always be a seam, but, I'm not bothering to rewrite just for that
 									if (topY > maxTopY) topY = maxTopY;
 									
@@ -330,7 +360,7 @@ AFRAME.registerSystem('building',{
 							);
 							wallShape.lineTo(
 								wallLength,
-								(nextWallNode.components.position.data.y-curWallNode.components.position.data.y)+nextWallNode.components.wall.data.height
+								(nextWallNode.components.position.data.y-curWallNode.components.position.data.y)+getWallHeight(nextWallNode)
 							);
 							
 							var wallGeom = new THREE.ShapeGeometry(wallShape);
@@ -379,7 +409,7 @@ AFRAME.registerSystem('building',{
 								var curWallNode = walls[wallIndex];
 								var curVert = capGeom.vertices[wallIndex];
 								curVert.set(curVert.x,curWallNode.components.position.data.y,curVert.y);
-								if (isCeiling) curVert.y += curWallNode.components.wall.data.height;
+								if (isCeiling) curVert.y += getWallHeight(curWallNode);
 							}
 							
 							var shouldReverse = false;
@@ -579,6 +609,9 @@ AFRAME.registerComponent('room',Object.assign({
 	
 	schema:{
 		outside:{type:'boolean'},
+		height:{type:'number', default:2.4},
+		width:{type:'number'},
+		length:{type:'number'}
 	},
 	
 },refreshSceneConfig));
@@ -586,7 +619,7 @@ AFRAME.registerComponent('room',Object.assign({
 AFRAME.registerComponent('wall',Object.assign({
 	
 	schema:{
-		height:{type:'number', default:2.4},
+		height:{type:'number'},
 	}
 	
 },refreshSceneConfig));
@@ -629,7 +662,10 @@ AFRAME.registerComponent('sides',refreshSceneConfig);
 AFRAME.registerPrimitive('rw-room',{
 	defaultComponents:{room:{}},
 	mappings:{
-		outside:'room.outside'
+		outside:'room.outside',
+		height:'room.height',
+		width:'room.width',
+		length:'room.length'
 	}
 });
 

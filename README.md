@@ -72,11 +72,11 @@ require('aframe-room-component');
 
 #### Overview
 
-This is set of primitives (also usable as components) that can be used to easily lay out rooms connected by doors in A-Frame. Here is an overview of their usage:
+This is set of primitives (also usable as components) that can be used to easily lay out rooms connected by doors in A-Frame. Here is an overview of their usage. (Attributes in *italics* are redundant shorthands; see below.)
 
 | Primitive   | Component | Purpose | Attributes &amp; Components |
 | - | - | - | - |
-| rw-room     | room      | Contains a set of walls, and other objects. | position, material, outside |
+| rw-room     | room      | Contains a set of walls, and other objects. | position, outside, *material, height, width, length* |
 | rw-wall     | wall      | Marks one corner of a wall, which will connect to the next. | position, material, height |
 | rw-doorhole | doorhole  | Marks a wall so that a doorlink can connect to it. | (none) |
 | rw-doorlink | doorlink  | Connects two doorholes, as well as positioning them as close to it as possible. | from, to, position, width, height |
@@ -88,8 +88,6 @@ An `a-scene` can contain multiple `rw-room`s.
 
 An `rw-room` must contain at least three `rw-wall`s. You can add `outside="true"` to the room if you want its walls to describe the outside of a building rather than the interior of a room.
 
-If an `rw-wall` does not have a `material` component, it will use its parent `rw-room`'s material component. (A material component **must** be supplied on either the `rw-wall` or the `rw-room`.) The same goes for `rw-floor`, `rw-ceiling` and `rw-sides` (and their parent `rw-doorlink` or `rw-room`).
-
 An `rw-wall` can have any a-frame entity as a child. `rw-wall`s are oriented so that their `x` direction always points toward the next wall; i.e., when an object is parented to an `rw-wall`, its `x` coordinate controls how far along the wall it is, its `y` coordinate controls how high off the ground it is, and its `z` coordinate controls how distant from the wall it is.
 
 An `rw-doorhole` must be the child of an `rw-wall`. It is used to indicate on which wall a door connection should exist. An `rw-doorhole` can also have any a-frame entity as a child (for example, a model of a literal door). Note: do **not** apply a `position` to an `rw-doorhole`! Their position will be assigned by the `rw-doorlink` they are linked to.
@@ -97,6 +95,14 @@ An `rw-doorhole` must be the child of an `rw-wall`. It is used to indicate on wh
 An `rw-doorlink` can be a child of an `a-scene` (i.e. outside of a room), or a child of an `rw-wall`. (It **cannot** be the child of an `rw-doorhole`!) Its position is used to automatically set the position of the two `rw-doorhole`s that it is connected to: they will be moved as close as possible to it on their walls. This allows doorways to always automatically be directly connected by the shortest distance (rather than forcing you to manually position both of the doorholes to line up). Choosing whether to parent the `rw-doorlink` to the scene or to one of the two walls that it's connecting is up to you, depending on the building layout you're creating. (It may be simpler to make adjustments a room depending on whether or not the door moves with it or tries to stay in place.)
 
 An `rw-floor` and an `rw-ceiling` must be the child of either an `rw-room` or an `rw-doorlink`. They exist as a place to attach the material you wish to have applied to the floor or ceiling of the room (or doorlink). An `rw-sides` is similar, but is only used in doorlinks. You can omit them if you wish (i.e. if you would rather manually create a single floorplane for your entire building instead).
+
+#### Shorthands
+
+If an `rw-wall` does not have a `material` component, it will use its parent `rw-room`'s material component. (A material component **must** be supplied on either the `rw-wall` or the `rw-room`.) The same goes for `rw-floor`, `rw-ceiling` and `rw-sides` (and their parent `rw-doorlink` or `rw-room`).
+
+Similarly, if an `rw-wall` does not have a `height` attribute, it will use its parent `rw-room`'s height attribute. (If neither has a height attribute, a default height of 2.4m will be used.)
+
+If an `rw-room` has a `width` attribute **and** a `length` attribute, and four `rw-wall`s inside, the `position`s can be ommitted from the walls; they will be set automatically, to form a rectangle with one corner at `0,0` and the opposite corner at `width,length`. (This is just to save typing in the relatively common case of rectangular, axis-aligned rooms.)
 
 
 
@@ -117,7 +123,6 @@ These primitives should all correctly respect changes made in the Inspector; how
 #### Planned features
 
 - Greater control over UV generation (world space, scale to surface, etc)
-- Shorthand to create axis-aligned rectangular rooms more quickly by only specifying a length and width
 - Automatically assign collision for movement and teleportation systems
 - Create doors above ground level (i.e. windows)
 - Specify shapes to be extruded to automatically create doorframes and baseboards

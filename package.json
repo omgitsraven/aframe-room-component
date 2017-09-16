@@ -1,6 +1,6 @@
 {
   "name": "aframe-room-component",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "An A-Frame component for quickly creating rooms connected by doors.",
   "main": "index.js",
   "cdn": "dist/aframe-room-component.min.js",
