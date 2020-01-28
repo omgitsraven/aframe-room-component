@@ -1,6 +1,6 @@
 {
   "name": "aframe-room-component",
-  "version": "0.3.0",
+  "version": "0.3.2",
   "description": "An A-Frame component for quickly creating rooms connected by doors.",
   "main": "index.js",
   "cdn": "dist/aframe-room-component.min.js",
@@ -28,7 +28,7 @@
     "webvr",
     "room"
   ],
-  "author": "Andrew Fraticelli <andrew.fraticelli@gmail.com>",
+  "author": "Hazel Fraticelli <omgitsraven@gmail.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/omgitsraven/aframe-room-component/issues"

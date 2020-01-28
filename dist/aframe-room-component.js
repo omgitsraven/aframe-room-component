@@ -189,15 +189,18 @@
 				return wallList[(curWallIndex+1)%wallList.length];
 			}
 			
+			var worldWallPos = new THREE.Vector3();
+			var worldNextPos = new THREE.Vector3();
+			var worldLinkPos = new THREE.Vector3();
 			function moveForLink(doorholeEl,doorlinkEl){
 				
 				var holeWallEl = doorholeEl.parentNode;
 				var nextWallEl = getNextWallEl(holeWallEl);
 				if (!nextWallEl) return;
 				
-				var worldWallPos = holeWallEl.object3D.getWorldPosition();
-				var worldNextPos = nextWallEl.object3D.getWorldPosition();
-				var worldLinkPos = doorlinkEl.object3D.getWorldPosition();
+				holeWallEl.object3D.getWorldPosition(worldWallPos);
+				nextWallEl.object3D.getWorldPosition(worldNextPos);
+				doorlinkEl.object3D.getWorldPosition(worldLinkPos);
 				
 				var linkGapX = worldLinkPos.x - worldWallPos.x;
 				var linkGapZ = worldLinkPos.z - worldWallPos.z;
