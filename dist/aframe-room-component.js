@@ -102,36 +102,39 @@
 			
 			
 			function flipGeom(geom){
-				for(var curFaceIndex=0; curFaceIndex<geom.faces.length; curFaceIndex++){
-					var curFace = geom.faces[curFaceIndex];
-					var bucket = curFace.c;
-					curFace.c = curFace.b;
-					curFace.b = bucket;
+				var indexCopy = geom.index.array;
+				for(var curFaceIndex=0; curFaceIndex<indexCopy.length/3; curFaceIndex++){
+					var bucket = indexCopy[curFaceIndex*3+2];
+					indexCopy[curFaceIndex*3+2] = indexCopy[curFaceIndex*3+1];
+					indexCopy[curFaceIndex*3+1] = bucket;
 				}
+				geom.setIndex(new THREE.BufferAttribute(new Float32Array(indexCopy),1));
 			}
 			
 			function makeUvsForGeom(geom,callback){
-				
-				var letters = ['a','b','c'];
-				for(var faceIndex=0; faceIndex<geom.faces.length; faceIndex++){
-					var curFaceVertexIndices = geom.faces[faceIndex];
-					
-					if (!geom.faceVertexUvs[0][faceIndex]) geom.faceVertexUvs[0][faceIndex] = [];
-					var curFaceUvs = geom.faceVertexUvs[0][faceIndex];
-					
-					for(var faceVertIndex=0; faceVertIndex<letters.length; faceVertIndex++){
-						var vertexIndex = curFaceVertexIndices[letters[faceVertIndex]];
-						var vertex = geom.vertices[vertexIndex];
-						if (!curFaceUvs[faceVertIndex]) curFaceUvs[faceVertIndex] = new THREE.Vector2();
-						var uv = curFaceUvs[faceVertIndex];
-						callback(vertex,uv,vertexIndex);
-					}
+				var allUVs = [];
+				for(var faceVertIndex=0; faceVertIndex<geom.index.array.length; faceVertIndex++){
+					var vertexIndex = geom.index.array[faceVertIndex];
+					var vertex = new THREE.Vector3(
+						geom.attributes.position.getX(vertexIndex),
+						geom.attributes.position.getY(vertexIndex),
+						geom.attributes.position.getZ(vertexIndex)
+					);
+					var uv = callback(vertex,faceVertIndex%3);
+					allUVs[vertexIndex*2+0] = uv[0];
+					allUVs[vertexIndex*2+1] = uv[1];
 				}
+				geom.setAttribute('uv',new THREE.BufferAttribute(new Float32Array(allUVs),2));
 				geom.uvsNeedUpdate = true;
 				
 			}
 			function makePlaneUvs(geom,uKey,vKey,uMult,vMult){
-				makeUvsForGeom(geom,function(pt,uv){ uv.set(pt[uKey]*uMult,pt[vKey]*vMult); });
+				makeUvsForGeom(geom,function(pt){
+					return [
+						pt[uKey]*uMult,
+						pt[vKey]*vMult
+					];
+				});
 			}
 			
 			function finishGeom(geom){
@@ -456,9 +459,14 @@
 								var capGeom = new THREE.ShapeGeometry(capShape);
 								for(var wallIndex=0; wallIndex<walls.length; wallIndex++){
 									var curWallNode = walls[wallIndex];
-									var curVert = capGeom.vertices[wallIndex];
+									var curVert = new THREE.Vector3(
+										capGeom.attributes.position.getX(wallIndex),
+										capGeom.attributes.position.getY(wallIndex),
+										capGeom.attributes.position.getZ(wallIndex)
+									);
 									curVert.set(curVert.x,curWallNode.components.position.data.y,curVert.y);
 									if (isCeiling) curVert.y += getWallHeight(curWallNode);
+									capGeom.attributes.position.setXYZ(wallIndex,curVert.x,curVert.y,curVert.z);
 								}
 								
 								var shouldReverse = false;
@@ -520,7 +528,7 @@
 							
 							if (!doorLinkChild.myGeoms) doorLinkChild.myGeoms=[];
 							if (!doorLinkChild.myGeoms[curType]) {
-								var curGeom = new THREE.Geometry();
+								var curGeom = new THREE.BufferGeometry();
 								doorLinkChild.myGeoms[curType] = curGeom;
 								var myMesh = new THREE.Mesh(
 									curGeom,
@@ -528,17 +536,22 @@
 								);
 								curGeom.meshRef = myMesh;
 								doorLinkChild.setObject3D(curType,myMesh);
-								curGeom.faces.push( new THREE.Face3(0,1,2), new THREE.Face3(1,3,2) );
-								if (curType=="sides") curGeom.faces.push( new THREE.Face3(4,5,6), new THREE.Face3(5,7,6) );
+								var indexArray = [];
+								indexArray.push( 0,1,2, 1,3,2 );
+								if (curType=="sides") indexArray.push( 4,5,6, 5,7,6 );
+								curGeom.setIndex(new THREE.BufferAttribute(new Float32Array(indexArray),1));
 							}
 							
 							var curGeom = doorLinkChild.myGeoms[curType];
 							curGeom.meshRef.material = myMat;
-							curGeom.vertices.length=0;
+							var positionArray = [];
 							function addWorldVertex(pt){
 								var localPt = pt.clone();
 								doorLinkChild.object3D.worldToLocal(localPt);
-								curGeom.vertices.push(localPt);
+								positionArray.push(localPt.x,localPt.y,localPt.z);
+							}
+							function commitVertices(){
+								curGeom.setAttribute('position',new THREE.BufferAttribute(new Float32Array(positionArray),3));
 							}
 							var fVerts=curDoorlink.data.from.myVerts;
 							var tVerts=curDoorlink.data.to.myVerts;
@@ -550,11 +563,13 @@
 									addWorldVertex(fVerts[2]);
 									addWorldVertex(fVerts[0]);
 									
-									makeUvsForGeom(curGeom,function(pt,uv,vertIndex){
-										uv.set(
+									commitVertices();
+									
+									makeUvsForGeom(curGeom,function(pt,vertIndex){
+										return [
 											1-(vertIndex%2),
 											1-Math.floor(vertIndex/2)
-										);
+										];
 									});
 									
 								break;
@@ -565,11 +580,13 @@
 									addWorldVertex(fVerts[1]);
 									addWorldVertex(fVerts[3]);
 									
-									makeUvsForGeom(curGeom,function(pt,uv,vertIndex){
-										uv.set(
+									commitVertices();
+									
+									makeUvsForGeom(curGeom,function(pt,vertIndex){
+										return [
 											vertIndex%2,
 											1-Math.floor(vertIndex/2)
-										);
+										];
 									});
 									
 								break;
@@ -585,12 +602,14 @@
 									addWorldVertex(tVerts[0]);
 									addWorldVertex(tVerts[1]);
 									
-									makeUvsForGeom(curGeom,function(pt,uv,vertIndex){
-										uv.set(
-											Math.floor(vertIndex/2),
-											vertIndex%2
-										);
-										if (vertIndex<4) uv.x = 1-uv.x;
+									commitVertices();
+									
+									makeUvsForGeom(curGeom,function(pt,vertIndex){
+										var uv = [];
+										uv[0] = Math.floor(vertIndex/2);
+										uv[1] = vertIndex%2;
+										if (vertIndex<4) uv[0] = 1-uv[0];
+										return uv;
 									});
 									
 								break;
