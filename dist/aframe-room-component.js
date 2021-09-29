@@ -102,13 +102,13 @@
 			
 			
 			function flipGeom(geom){
-				var indexCopy = geom.index.array;
-				for(var curFaceIndex=0; curFaceIndex<indexCopy.length/3; curFaceIndex++){
+				var indexCopy = geom.index;
+				for(var curFaceIndex=0; curFaceIndex<indexCopy.count/3; curFaceIndex++){
 					var bucket = indexCopy[curFaceIndex*3+2];
 					indexCopy[curFaceIndex*3+2] = indexCopy[curFaceIndex*3+1];
 					indexCopy[curFaceIndex*3+1] = bucket;
 				}
-				geom.setIndex(new THREE.BufferAttribute(new Float32Array(indexCopy),1));
+				geom.setIndex(indexCopy);
 			}
 			
 			function makeUvsForGeom(geom,callback){
@@ -539,7 +539,7 @@
 								var indexArray = [];
 								indexArray.push( 0,1,2, 1,3,2 );
 								if (curType=="sides") indexArray.push( 4,5,6, 5,7,6 );
-								curGeom.setIndex(new THREE.BufferAttribute(new Float32Array(indexArray),1));
+								curGeom.setIndex(indexArray);
 							}
 							
 							var curGeom = doorLinkChild.myGeoms[curType];
@@ -614,8 +614,6 @@
 									
 								break;
 							}
-							curGeom.verticesNeedUpdate=true;
-							curGeom.elementsNeedUpdate=true;
 							finishGeom(curGeom);
 							
 						}
