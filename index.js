@@ -14,7 +14,7 @@ AFRAME.registerSystem('building',{
 		
 		
 		https://github.com/omgitsraven/aframe-room-component
-		v0.1.0
+		v0.4.1
 		
 		
 		
@@ -92,7 +92,6 @@ AFRAME.registerSystem('building',{
 		}
 		
 		function finishGeom(geom){
-			geom.computeFaceNormals();
 			geom.computeVertexNormals();
 			// are these necessary?
 			geom.computeBoundingBox();
