@@ -14,7 +14,7 @@ AFRAME.registerSystem('building',{
 		
 		
 		https://github.com/omgitsraven/aframe-room-component
-		v0.4.1
+		v0.4.2
 		
 		
 		
