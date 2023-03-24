@@ -14,7 +14,7 @@ AFRAME.registerSystem('building',{
 		
 		
 		https://github.com/omgitsraven/aframe-room-component
-		v0.4.1
+		v0.4.2
 		
 		
 		
@@ -56,13 +56,14 @@ AFRAME.registerSystem('building',{
 		
 		
 		function flipGeom(geom){
-			var indexCopy = geom.index;
-			for(var curFaceIndex=0; curFaceIndex<indexCopy.count/3; curFaceIndex++){
-				var bucket = indexCopy[curFaceIndex*3+2];
-				indexCopy[curFaceIndex*3+2] = indexCopy[curFaceIndex*3+1];
-				indexCopy[curFaceIndex*3+1] = bucket;
+			const indices = geom.getIndex().array;
+			for (let i = 0; i < indices.length; i += 3) {
+				const tempIndex = indices[i + 2];
+				indices[i + 2] = indices[i + 1];
+				indices[i + 1] = tempIndex;
 			}
-			geom.setIndex(indexCopy);
+
+			geom.getIndex().needsUpdate = true;
 		}
 		
 		function makeUvsForGeom(geom,callback){
